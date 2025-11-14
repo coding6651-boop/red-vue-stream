@@ -17,7 +17,6 @@ const Admin = () => {
   const [isAdmin, setIsAdmin] = useState(false);
   const [videos, setVideos] = useState<any[]>([]);
 
-  const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [videoFile, setVideoFile] = useState<File | null>(null);
   const [coverFile, setCoverFile] = useState<File | null>(null);
@@ -97,11 +96,14 @@ const Admin = () => {
         .from("covers")
         .getPublicUrl(coverPath);
 
+      // Auto-generate title from video filename
+      const autoTitle = videoFile.name.replace(/\.[^/.]+$/, "").replace(/[-_]/g, " ");
+
       // Create video record
       const { error: dbError } = await supabase
         .from("videos")
         .insert({
-          title,
+          title: autoTitle,
           description,
           video_url: videoUrl.publicUrl,
           cover_url: coverUrl.publicUrl,
@@ -110,7 +112,6 @@ const Admin = () => {
       if (dbError) throw dbError;
 
       toast.success("Video uploaded successfully!");
-      setTitle("");
       setDescription("");
       setVideoFile(null);
       setCoverFile(null);
@@ -168,17 +169,6 @@ const Admin = () => {
             <CardContent>
               <form onSubmit={handleUpload} className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="title">Title</Label>
-                  <Input
-                    id="title"
-                    value={title}
-                    onChange={(e) => setTitle(e.target.value)}
-                    required
-                    className="bg-secondary border-border"
-                  />
-                </div>
-
-                <div className="space-y-2">
                   <Label htmlFor="description">Description</Label>
                   <Textarea
                     id="description"
@@ -186,6 +176,7 @@ const Admin = () => {
                     onChange={(e) => setDescription(e.target.value)}
                     rows={4}
                     className="bg-secondary border-border"
+                    placeholder="Enter video description..."
                   />
                 </div>
 
